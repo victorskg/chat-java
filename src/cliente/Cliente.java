@@ -1,5 +1,6 @@
 package cliente;
 
+import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -13,6 +14,7 @@ public class Cliente {
     private Socket socket = null;
     private DataOutputStream saidaDados = null;
     private DataInputStream entradaDadosConsole = null;
+    private DataInputStream entradaDadosServidor = null;
 
     public Cliente(String endereco, int porta) {
         System.out.println("Tentando conectar. Por favor, aguarde...");
@@ -28,11 +30,20 @@ public class Cliente {
         String textoCliente = "";
         while (!textoCliente.equals("bye")) {
             try {
+                //Escreve texto do cliente
                 textoCliente = entradaDadosConsole.readLine();
                 saidaDados.writeUTF(textoCliente);
                 saidaDados.flush();
             } catch(IOException ioe) {
-                System.out.println("Erro ao enviar mensagem: " + ioe.getMessage());
+                System.out.println("Ops! " + ioe.getMessage());
+            }
+
+            try {
+                //Ler texto vindo do servidor
+                String textoServidor = entradaDadosServidor.readUTF();
+                System.out.println("Servidor diz: " + textoServidor);
+            } catch (IOException ioe) {
+                System.out.println("Ops! " + ioe.getMessage());
             }
         }
     }
@@ -40,6 +51,7 @@ public class Cliente {
     public void iniciar() throws IOException{
         entradaDadosConsole = new DataInputStream(System.in);
         saidaDados = new DataOutputStream(socket.getOutputStream());
+        entradaDadosServidor = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
     }
 
     public static void main(String[] args) {

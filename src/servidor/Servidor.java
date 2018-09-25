@@ -2,6 +2,7 @@ package servidor;
 
 import java.io.BufferedInputStream;
 import java.io.DataInputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -14,6 +15,9 @@ public class Servidor {
     private ServerSocket socketServidor = null;
     private DataInputStream entradaDadosCliente = null;
 
+    private DataOutputStream saidaDados = null;
+    private DataInputStream entradaDadosConsole = null;
+
 
     public Servidor(int porta) {
         try {
@@ -25,13 +29,24 @@ public class Servidor {
             System.out.println("Cliente " + socket.getInetAddress().getHostName() + " conectado.");
             abrirConexao();
             terminarConexao = false;
+            String textoServidor = "";
             while (!terminarConexao) {
                 try {
+                    //Ler texto vindo do cliente
                     String textoCliente = entradaDadosCliente.readUTF();
-                    System.out.println(socket.getInetAddress().getHostAddress() + " diz: " + textoCliente);
+                    System.out.println("Cliente diz: " + textoCliente);
                     terminarConexao = textoCliente.equals("bye");
                 } catch (IOException e) {
                     terminarConexao = true;
+                }
+
+                try {
+                    //Escreve e envia texto do servidor
+                    textoServidor = entradaDadosConsole.readLine();
+                    saidaDados.writeUTF(textoServidor);
+                    saidaDados.flush();
+                } catch (IOException e) {
+                    System.out.println("Ops! " + e.getMessage());
                 }
             }
             fecharConexao();
@@ -42,6 +57,8 @@ public class Servidor {
 
     public void abrirConexao() throws IOException {
         entradaDadosCliente = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
+        entradaDadosConsole = new DataInputStream(System.in);
+        saidaDados = new DataOutputStream(socket.getOutputStream());
     }
 
     public void fecharConexao() throws IOException{
